@@ -1,4 +1,4 @@
-# Hivey LLM Security Lab
+# LLM Security Lab
 
 A deliberately vulnerable AI assistant — and its hardened twin — with an
 **automated red-team suite that proves each attack works and each fix blocks it**.
