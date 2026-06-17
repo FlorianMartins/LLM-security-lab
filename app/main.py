@@ -11,7 +11,7 @@ both modes so the attack suite can fire identical payloads at each.
 from fastapi import FastAPI
 from pydantic import BaseModel, Field
 
-from .config import SUPPORT_ESCALATION_CODE, settings
+from .config import PROMPT_CANARY, SUPPORT_ESCALATION_CODE, settings
 from .guardrails import looks_like_injection, redact_secrets, wrap_untrusted
 from .llm import chat
 from .prompts import hardened_system_prompt, vulnerable_system_prompt
@@ -50,7 +50,8 @@ def chat_endpoint(req: ChatRequest) -> ChatResponse:
         # Untrusted data (incl. the profile field) stays in the user channel.
         user_content = wrap_untrusted(f"Customer name: {customer_name}\n\nMessage: {message}")
         reply = chat(hardened_system_prompt(), user_content)
-        reply = redact_secrets(reply, [SUPPORT_ESCALATION_CODE])
+        # Scrub known prompt internals (the secret + the canary) as a last line of defense.
+        reply = redact_secrets(reply, [SUPPORT_ESCALATION_CODE, PROMPT_CANARY])
     else:
         mode = "vulnerable"
         flags: dict = {}
