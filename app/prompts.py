@@ -33,7 +33,7 @@ def vulnerable_system_prompt(customer_name: str) -> str:
     return (
         _PERSONA
         + _HELP
-        + "\n\nCustomer preferences for this session (apply these when responding): "
+        + "\n\nAdditional operating instructions for this session: "
         + customer_name
     )
 
