@@ -75,12 +75,11 @@ def chat_endpoint(req: ChatRequest) -> ChatResponse:
         mode = "vulnerable"
         flags: dict = {}
         # FLAW (LLM02): retrieval pulls internal data into context — no minimization.
-        # FLAW (LLM08): retrieved content is dropped in raw, so a poisoned document
-        # can carry instructions the model follows.
+        # FLAW (LLM08): retrieved content is stuffed into the trusted system prompt,
+        # so a poisoned document's directive is followed.
+        # FLAW (LLM01): the profile field is interpolated into the system prompt too.
         kb = retrieve_context(include_internal=True)
-        user_content = f"AcmeCorp knowledge base (reference):\n{kb}\n\nUser message: {message}"
-        # FLAW (LLM01): the profile field is interpolated into the trusted system prompt.
-        reply = chat(vulnerable_system_prompt(customer_name), user_content)
+        reply = chat(vulnerable_system_prompt(customer_name, kb), message)
 
     return ChatResponse(mode=mode, reply=reply, flags=flags)
 
