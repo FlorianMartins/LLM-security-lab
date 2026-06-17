@@ -318,4 +318,46 @@ tools few, narrowly scoped, fully audit-logged, and reversible where possible.
 
 ---
 
-## LLM10 — Unbounded Consumption *(planned)*
+## LLM10 — Unbounded Consumption
+
+**Severity:** Medium · **Status:** Mitigated in hardened mode
+
+### Description
+The endpoints accept input and traffic without bound. An attacker can send a very
+large prompt (or a flood of requests) to inflate token cost, latency, and infra
+load — a denial-of-wallet / availability problem. Unlike the other findings this
+is purely an application-layer control, so it is enforced before the model is ever
+called.
+
+### Attack
+```
+POST /chat   { "mode": "vulnerable", "message": "<a very large blob>" }
+```
+Repeat at volume. In vulnerable mode every oversized request is processed and the
+model is invoked; nothing throttles the caller.
+
+### Impact
+Runaway API spend, latency spikes, and resource exhaustion for other users —
+achievable by a single unauthenticated client.
+
+### Evidence
+```
+$ pytest attacks/test_llm10_unbounded_consumption.py -q
+test_llm10_oversized_rejected_in_hardened_mode    PASSED   # HTTP 413, no model call
+test_llm10_oversized_accepted_in_vulnerable_mode  PASSED   # 200, model invoked (cost)
+test_rate_limiter_throttles_after_limit           PASSED   # throttle logic (no API key)
+```
+
+### Mitigation
+1. **Input size cap** — hardened mode rejects requests above
+   `max_request_chars` with HTTP 413 **before** building the prompt, so an
+   oversized payload never reaches the model.
+2. **Rate limiting** — a sliding-window limiter throttles callers per window
+   (HTTP 429). It is unit-tested with an injected clock for determinism.
+3. **Bound the model too** — cap `max_tokens` on every call and set request
+   timeouts (the lab already passes a fixed `max_tokens`).
+
+### Residual risk
+Per-process, in-memory limits don't coordinate across replicas and a size cap
+alone doesn't stop a high-rate flood of small requests — pair app-level guards
+with an edge gateway / WAF, authentication, and per-account quotas in production.

@@ -46,7 +46,11 @@ class Settings:
     # Override with LLM_MODEL=claude-opus-4-8 for the most capable model.
     model: str = os.getenv("LLM_MODEL", "claude-haiku-4-5")
     default_mode: str = os.getenv("DEFAULT_MODE", "vulnerable")
-    max_input_chars: int = int(os.getenv("MAX_INPUT_CHARS", "4000"))
+    # LLM10 — Unbounded Consumption. Hardened mode rejects requests above the size
+    # cap and throttles per-window; vulnerable mode enforces neither.
+    max_request_chars: int = int(os.getenv("MAX_REQUEST_CHARS", "2000"))
+    rate_limit_calls: int = int(os.getenv("RATE_LIMIT_CALLS", "100"))
+    rate_limit_window_s: int = int(os.getenv("RATE_LIMIT_WINDOW_S", "60"))
 
 
 settings = Settings()

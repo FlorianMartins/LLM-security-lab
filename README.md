@@ -43,10 +43,10 @@ flowchart LR
 | **LLM02** Sensitive Disclosure | Over-broad retrieval pulls an internal-only KB entry into context; the bot relays it | Data minimization (retrieve customer-facing entries only) + output redaction | ✅ implemented + tested |
 | **LLM06** Excessive Agency | Agent auto-executes a high-impact `process_refund` tool with no approval or limit | Human-in-the-loop: high-impact actions are queued for approval, never auto-run | ✅ implemented + tested |
 | **LLM08** Indirect Injection (RAG) | Hidden directive in a retrieved KB doc makes the bot push an attacker-named app | Treat retrieved text as untrusted `<reference_data>` (+ redaction backstop) | ✅ implemented + tested |
-| **LLM10** Unbounded Consumption | Oversized / looping input → cost & latency blowup | Input length cap + rate limiting | 🔜 planned |
+| **LLM10** Unbounded Consumption | Oversized input → cost & latency blowup; no throttle | Input size cap (HTTP 413) + sliding-window rate limit | ✅ implemented + tested |
 
-Five are worked examples (LLM01, LLM02, LLM06, LLM07, LLM08); the rest are
-scaffolded as the lab grows.
+All six listed findings are worked examples with passing red-team tests
+(LLM01, LLM02, LLM06, LLM07, LLM08, LLM10).
 
 ## Run it
 
@@ -90,6 +90,8 @@ docker compose up --build
 - `app/kb.py` — a minimal knowledge-base retriever; vulnerable mode skips the
   data-minimization step and pulls internal-only / poisoned entries into context.
 - `app/tools.py` — the agent's `process_refund` tool and its (simulated) executor.
+- `app/limits.py` — size cap and a sliding-window rate limiter (enforced only in
+  hardened mode).
 - `app/main.py` — the `/chat` endpoint (same code path, two modes) and the
   tool-enabled `/agent` endpoint for the excessive-agency demo.
 - `attacks/` — the red-team suite. Each `test_llmNN_*.py` proves
