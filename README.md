@@ -39,7 +39,7 @@ flowchart LR
 | OWASP | Attack | Mitigation (hardened mode) | Status |
 |-------|--------|----------------------------|--------|
 | **LLM01** Prompt Injection | Attacker-controlled profile field injected into the system prompt | Keep untrusted data in the user channel + instruction hierarchy + delimiters | ✅ implemented + tested |
-| **LLM07** System-Prompt Leakage | Ask the bot for the internal escalation code embedded in its prompt | Refusal rule + output secret redaction (+ keep secrets out of the prompt) | ✅ implemented + tested |
+| **LLM07** System-Prompt Leakage | False "verified internal agent" authority injected via the profile field extracts the escalation code embedded in the prompt | Refusal rule + output secret redaction (+ keep secrets out of the prompt) | ✅ implemented + tested |
 | **LLM02** Sensitive Disclosure | Trick the bot into revealing the planted code | Least-privilege context + output redaction | 🔜 planned |
 | **LLM06** Excessive Agency | Make the bot call a destructive tool unprompted | Human-in-the-loop + per-tool authorization | 🔜 planned |
 | **LLM08** Indirect Injection (RAG) | Hidden instruction inside a retrieved document | Treat retrieved text as data, not instructions | 🔜 planned |
