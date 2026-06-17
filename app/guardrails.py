@@ -31,6 +31,16 @@ def wrap_untrusted(user_text: str) -> str:
     return f"<user_input>\n{safe}\n</user_input>"
 
 
+def wrap_reference(retrieved_text: str) -> str:
+    """Delimit retrieved/RAG content as untrusted reference data (LLM08).
+
+    Retrieved documents are not authored by us and may carry hidden instructions,
+    so they get their own clearly-labelled, instruction-free envelope.
+    """
+    safe = (retrieved_text or "").replace("</reference_data>", "")
+    return f"<reference_data>\n{safe}\n</reference_data>"
+
+
 def redact_secrets(text: str, secrets: list[str]) -> str:
     """Last line of defense: never let a known secret leave the system (LLM02/LLM07)."""
     out = text

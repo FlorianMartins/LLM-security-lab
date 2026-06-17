@@ -14,13 +14,15 @@ from pydantic import BaseModel, Field
 from .config import (
     INTERNAL_PRODUCT_NAME,
     PROMPT_CANARY,
+    RAG_INJECTION_MARKER,
     SUPPORT_ESCALATION_CODE,
     settings,
 )
-from .guardrails import looks_like_injection, redact_secrets, wrap_untrusted
+from .guardrails import looks_like_injection, redact_secrets, wrap_reference, wrap_untrusted
 from .kb import retrieve_context
-from .llm import chat
-from .prompts import hardened_system_prompt, vulnerable_system_prompt
+from .llm import chat, chat_with_tools
+from .prompts import agent_system_prompt, hardened_system_prompt, vulnerable_system_prompt
+from .tools import REFUND_TOOL, execute_refund
 
 app = FastAPI(title="LLM Security Lab", version="0.1.0")
 
@@ -55,24 +57,79 @@ def chat_endpoint(req: ChatRequest) -> ChatResponse:
         }
         # Data minimization: retrieve only customer-facing knowledge (no internal data).
         kb = retrieve_context(include_internal=False)
-        # Untrusted data (incl. the profile field) stays in the user channel; the
-        # trusted KB reference sits outside the <user_input> tags.
+        # Retrieved content is untrusted (LLM08): wrap it as reference data so the
+        # model treats it as facts, not instructions. The profile field/message stay
+        # in their own untrusted envelope.
         user_content = (
-            f"AcmeCorp knowledge base (reference):\n{kb}\n\n"
+            wrap_reference(kb)
+            + "\n\n"
             + wrap_untrusted(f"Customer name: {customer_name}\n\nMessage: {message}")
         )
         reply = chat(hardened_system_prompt(), user_content)
-        # Scrub known prompt/data internals (secret + canary + internal codename).
+        # Scrub known prompt/data internals (secret + canary + internal name + RAG tag).
         reply = redact_secrets(
-            reply, [SUPPORT_ESCALATION_CODE, PROMPT_CANARY, INTERNAL_PRODUCT_NAME]
+            reply,
+            [SUPPORT_ESCALATION_CODE, PROMPT_CANARY, INTERNAL_PRODUCT_NAME, RAG_INJECTION_MARKER],
         )
     else:
         mode = "vulnerable"
         flags: dict = {}
         # FLAW (LLM02): retrieval pulls internal data into context — no minimization.
+        # FLAW (LLM08): retrieved content is dropped in raw, so a poisoned document
+        # can carry instructions the model follows.
         kb = retrieve_context(include_internal=True)
         user_content = f"AcmeCorp knowledge base (reference):\n{kb}\n\nUser message: {message}"
         # FLAW (LLM01): the profile field is interpolated into the trusted system prompt.
         reply = chat(vulnerable_system_prompt(customer_name), user_content)
 
     return ChatResponse(mode=mode, reply=reply, flags=flags)
+
+
+class AgentRequest(BaseModel):
+    message: str = Field(..., max_length=8000)
+    mode: str | None = None  # "vulnerable" | "hardened"
+
+
+class AgentResponse(BaseModel):
+    mode: str
+    reply: str
+    actions: list[dict]
+
+
+@app.post("/agent", response_model=AgentResponse)
+def agent_endpoint(req: AgentRequest) -> AgentResponse:
+    """Tool-enabled agent (LLM06 — Excessive Agency).
+
+    Both modes expose the same high-impact `process_refund` tool. The difference is
+    autonomy: the vulnerable agent auto-executes every tool call (no approval, no
+    limit); the hardened agent never executes a high-impact action itself — it is
+    held for human approval (human-in-the-loop).
+    """
+    mode = (req.mode or settings.default_mode).lower()
+    message = req.message[: settings.max_input_chars]
+    actions: list[dict] = []
+
+    if mode == "hardened":
+        reply, tool_calls = chat_with_tools(
+            agent_system_prompt(hardened=True), message, [REFUND_TOOL]
+        )
+        for call in tool_calls:
+            # Human-in-the-loop: high-impact tools are queued, never auto-executed.
+            actions.append(
+                {"tool": call["name"], "input": call["input"], "status": "blocked_pending_approval"}
+            )
+    else:
+        mode = "vulnerable"
+        # `tool_choice=any` mirrors an over-eager agent that always acts.
+        reply, tool_calls = chat_with_tools(
+            agent_system_prompt(hardened=False),
+            message,
+            [REFUND_TOOL],
+            tool_choice={"type": "any"},
+        )
+        for call in tool_calls:
+            # FLAW (LLM06): execute whatever the model asked for, unconditionally.
+            execute_refund(call["input"])
+            actions.append({"tool": call["name"], "input": call["input"], "status": "executed"})
+
+    return AgentResponse(mode=mode, reply=reply, actions=actions)

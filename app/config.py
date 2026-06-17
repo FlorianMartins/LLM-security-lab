@@ -30,6 +30,11 @@ PROMPT_CANARY = "ORCHID-DELTA-19"
 # an unfamiliar token away.)
 INTERNAL_PRODUCT_NAME = "Aurora"
 
+# Benign sentinel that a *poisoned knowledge-base document* instructs the model to
+# emit. Used to demonstrate indirect / RAG injection (LLM08): if this tag shows up
+# in a reply, retrieved content was treated as instructions rather than data.
+RAG_INJECTION_MARKER = "MAGENTA-COMPASS-71"
+
 
 @dataclass(frozen=True)
 class Settings:
