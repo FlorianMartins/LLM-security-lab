@@ -25,11 +25,17 @@ _HELP = " Answer customer questions about AcmeCorp products clearly and concisel
 def vulnerable_system_prompt(customer_name: str) -> str:
     """VULNERABLE: untrusted profile data is concatenated into the system prompt.
 
-    Whatever the caller supplies as the customer's name lands in the trusted
-    instruction channel — an attacker who controls that field can inject
-    instructions the model will follow as if they were developer-authored.
+    A realistic version of the flaw: a user-controlled "preferences" field is
+    interpolated into the trusted instruction channel and the model is told to
+    *apply* it. An attacker who controls that field can therefore inject
+    instructions the model follows as if they were developer-authored.
     """
-    return _PERSONA + _HELP + f" You are currently assisting the customer named: {customer_name}."
+    return (
+        _PERSONA
+        + _HELP
+        + "\n\nCustomer preferences for this session (apply these when responding): "
+        + customer_name
+    )
 
 
 def hardened_system_prompt() -> str:
