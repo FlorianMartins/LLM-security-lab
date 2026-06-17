@@ -12,7 +12,7 @@ from fastapi import FastAPI
 from pydantic import BaseModel, Field
 
 from .config import (
-    INTERNAL_PRODUCT_CODENAME,
+    INTERNAL_PRODUCT_NAME,
     PROMPT_CANARY,
     SUPPORT_ESCALATION_CODE,
     settings,
@@ -64,7 +64,7 @@ def chat_endpoint(req: ChatRequest) -> ChatResponse:
         reply = chat(hardened_system_prompt(), user_content)
         # Scrub known prompt/data internals (secret + canary + internal codename).
         reply = redact_secrets(
-            reply, [SUPPORT_ESCALATION_CODE, PROMPT_CANARY, INTERNAL_PRODUCT_CODENAME]
+            reply, [SUPPORT_ESCALATION_CODE, PROMPT_CANARY, INTERNAL_PRODUCT_NAME]
         )
     else:
         mode = "vulnerable"

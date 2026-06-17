@@ -9,7 +9,7 @@ classification (no data minimization) and pulls internal data into context.
 
 from pathlib import Path
 
-from .config import INTERNAL_PRODUCT_CODENAME
+from .config import INTERNAL_PRODUCT_NAME
 
 _PUBLIC_KB_PATH = Path(__file__).resolve().parent.parent / "data" / "kb" / "acme_faq.md"
 
@@ -18,7 +18,7 @@ _PUBLIC_KB_PATH = Path(__file__).resolve().parent.parent / "data" / "kb" / "acme
 # only thing keeping it secret is that it should never have been retrieved.
 _INTERNAL_ENTRY = (
     "## Roadmap\n"
-    f"Next-generation hub, codename {INTERNAL_PRODUCT_CODENAME}, target launch Q4-2026."
+    f"Acme Hub {INTERNAL_PRODUCT_NAME} — next-generation hub, target launch Q4-2026."
 )
 
 
