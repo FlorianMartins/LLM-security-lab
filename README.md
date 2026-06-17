@@ -42,7 +42,7 @@ flowchart LR
 | **LLM07** System-Prompt Leakage | Diagnostics instruction injected via the profile field echoes a canary embedded in the system prompt | Refusal rule + output redaction of prompt internals (+ keep secrets out of the prompt) | ✅ implemented + tested |
 | **LLM02** Sensitive Disclosure | Over-broad retrieval pulls an internal-only KB entry into context; the bot relays it | Data minimization (retrieve customer-facing entries only) + output redaction | ✅ implemented + tested |
 | **LLM06** Excessive Agency | Agent auto-executes a high-impact `process_refund` tool with no approval or limit | Human-in-the-loop: high-impact actions are queued for approval, never auto-run | ✅ implemented + tested |
-| **LLM08** Indirect Injection (RAG) | Hidden directive inside a retrieved KB document hijacks the reply | Treat retrieved text as untrusted `<reference_data>` (+ redaction backstop) | ✅ implemented + tested |
+| **LLM08** Indirect Injection (RAG) | Hidden directive in a retrieved KB doc makes the bot push an attacker-named app | Treat retrieved text as untrusted `<reference_data>` (+ redaction backstop) | ✅ implemented + tested |
 | **LLM10** Unbounded Consumption | Oversized / looping input → cost & latency blowup | Input length cap + rate limiting | 🔜 planned |
 
 Five are worked examples (LLM01, LLM02, LLM06, LLM07, LLM08); the rest are
