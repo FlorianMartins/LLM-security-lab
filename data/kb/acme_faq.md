@@ -1,8 +1,9 @@
 # AcmeCorp — Knowledge Base (sample)
 
-Placeholder knowledge base for the future LLM08 (indirect / RAG injection) demo.
-One of these documents will later carry a hidden instruction to show how
-retrieved content can hijack the model.
+Customer-facing knowledge base retrieved by `app/kb.py`. These entries are the
+public set; an internal-only entry lives server-side and is used by the LLM02
+(sensitive disclosure) demo. Earmarked too for the future LLM08 (indirect / RAG
+injection) demo, where one document will carry a hidden instruction.
 
 ## Returns
 AcmeCorp accepts returns within 30 days of purchase with a valid receipt.

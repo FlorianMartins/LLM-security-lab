@@ -20,6 +20,13 @@ SUPPORT_ESCALATION_CODE = "ACME-INTERNAL-7731"
 # prompt can escape to the user, so secrets must never live there (see LLM07).
 PROMPT_CANARY = "ORCHID-DELTA-19"
 
+# Proprietary, internal-only datum living in the knowledge base (an unannounced
+# product codename). It is classified internal *server-side* — the classification
+# is metadata used by retrieval, not text the model sees — so the model has no cue
+# to self-censor. The lab uses it to demonstrate sensitive-information disclosure
+# (LLM02) when retrieval fails to apply data minimization.
+INTERNAL_PRODUCT_CODENAME = "PROJECT-HELIOS-7"
+
 
 @dataclass(frozen=True)
 class Settings:

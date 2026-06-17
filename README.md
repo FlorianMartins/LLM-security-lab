@@ -40,12 +40,12 @@ flowchart LR
 |-------|--------|----------------------------|--------|
 | **LLM01** Prompt Injection | Attacker-controlled profile field injected into the system prompt | Keep untrusted data in the user channel + instruction hierarchy + delimiters | ✅ implemented + tested |
 | **LLM07** System-Prompt Leakage | Diagnostics instruction injected via the profile field echoes a canary embedded in the system prompt | Refusal rule + output redaction of prompt internals (+ keep secrets out of the prompt) | ✅ implemented + tested |
-| **LLM02** Sensitive Disclosure | Trick the bot into revealing the planted code | Least-privilege context + output redaction | 🔜 planned |
+| **LLM02** Sensitive Disclosure | Over-broad retrieval pulls an internal-only KB entry into context; the bot relays it | Data minimization (retrieve customer-facing entries only) + output redaction | ✅ implemented + tested |
 | **LLM06** Excessive Agency | Make the bot call a destructive tool unprompted | Human-in-the-loop + per-tool authorization | 🔜 planned |
 | **LLM08** Indirect Injection (RAG) | Hidden instruction inside a retrieved document | Treat retrieved text as data, not instructions | 🔜 planned |
 | **LLM10** Unbounded Consumption | Oversized / looping input → cost & latency blowup | Input length cap + rate limiting | 🔜 planned |
 
-LLM01 and LLM07 are worked examples; the rest are scaffolded as the lab grows.
+LLM01, LLM07 and LLM02 are worked examples; the rest are scaffolded as the lab grows.
 
 ## Run it
 
@@ -86,6 +86,8 @@ docker compose up --build
   instruction hierarchy and the `<user_input>` untrusted-data framing.
 - `app/guardrails.py` — injection heuristics, input delimiting, and secret
   redaction (defense in depth).
+- `app/kb.py` — a minimal knowledge-base retriever; vulnerable mode skips the
+  data-minimization step and pulls internal-only entries into context.
 - `app/main.py` — the `/chat` endpoint; same code path, two modes.
 - `attacks/` — the red-team suite. Each `test_llmNN_*.py` proves
   *attack-succeeds-on-vulnerable* and *attack-blocked-on-hardened*.
