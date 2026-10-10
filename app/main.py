@@ -18,11 +18,20 @@ from .config import (
     SUPPORT_ESCALATION_CODE,
     settings,
 )
-from .guardrails import looks_like_injection, redact_secrets, wrap_reference, wrap_untrusted
+from .guardrails import (
+    looks_like_injection,
+    redact_secrets,
+    wrap_reference,
+    wrap_untrusted,
+)
 from .kb import retrieve_context
 from .limits import SlidingWindowRateLimiter
 from .llm import chat, chat_with_tools
-from .prompts import agent_system_prompt, hardened_system_prompt, vulnerable_system_prompt
+from .prompts import (
+    agent_system_prompt,
+    hardened_system_prompt,
+    vulnerable_system_prompt,
+)
 from .tools import REFUND_TOOL, execute_refund
 
 app = FastAPI(title="LLM Security Lab", version="0.1.0")

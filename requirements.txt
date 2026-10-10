@@ -4,4 +4,4 @@ uvicorn[standard]>=0.30
 pydantic>=2
 pytest>=8
 httpx>=0.27
-ruff>=0.6
+ruff==0.17.0  # pinned: a new ruff release must not turn main red without a commit here
